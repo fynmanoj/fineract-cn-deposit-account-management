@@ -2,7 +2,10 @@ package org.apache.fineract.cn.deposit.service.internal.service;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.fineract.cn.accounting.api.v1.client.LedgerManager;
-import org.apache.fineract.cn.accounting.api.v1.domain.*;
+import org.apache.fineract.cn.accounting.api.v1.domain.Account;
+import org.apache.fineract.cn.accounting.api.v1.domain.Creditor;
+import org.apache.fineract.cn.accounting.api.v1.domain.Debtor;
+import org.apache.fineract.cn.accounting.api.v1.domain.JournalEntry;
 import org.apache.fineract.cn.api.util.UserContextHolder;
 import org.apache.fineract.cn.deposit.api.v1.definition.domain.Action;
 import org.apache.fineract.cn.deposit.api.v1.definition.domain.Charge;
@@ -10,7 +13,10 @@ import org.apache.fineract.cn.deposit.api.v1.definition.domain.Currency;
 import org.apache.fineract.cn.deposit.api.v1.definition.domain.ProductDefinition;
 import org.apache.fineract.cn.deposit.api.v1.instance.domain.ProductInstance;
 import org.apache.fineract.cn.deposit.api.v1.instance.domain.SubTransactionType;
-import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.*;
+import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.ActionState;
+import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.TransactionRequestData;
+import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.TransactionResponseData;
+import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.TransactionTypeEnum;
 import org.apache.fineract.cn.deposit.api.v1.transaction.utils.MathUtil;
 import org.apache.fineract.cn.deposit.service.ServiceConstants;
 import org.apache.fineract.cn.deposit.service.internal.command.TransactionCommand;
@@ -23,8 +29,6 @@ import org.apache.fineract.cn.lang.ServiceException;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +53,9 @@ public class TransactionService {
     private final SubTxnTypesService subTxnTypesService;
     private final TransactionRepository transactionRepository;
     private final ProductInstanceRepository productInstanceRepository;
+
+    public static final String DEBIT = "DEBIT";
+    public static final String CREDIT = "CREDIT";
 
     @Autowired
     public TransactionService(@Qualifier(ServiceConstants.LOGGER_NAME) Logger logger, LedgerManager ledgerManager,
@@ -100,7 +107,7 @@ public class TransactionService {
     private TransactionEntity doDeposit(TransactionRequestData request, AccountWrapper accountWrapper, List<Charge> charges, LocalDateTime transactionDate) {
         BigDecimal amount = request.getAmount().getAmount();
 
-        TransactionEntity txn = createTransaction(request,TransactionTypeEnum.DEPOSIT, transactionDate);
+        TransactionEntity txn = createTransaction(request,TransactionTypeEnum.DEPOSIT, transactionDate, CREDIT, null);
         String debitAccountIdentifier = accountWrapper.productDefinition.getCashAccountIdentifier();
         /* if subtxn is provided and it has an account configured the do debit that account*/
         if(StringUtils.isNotBlank(request.getSubTxnId())){
@@ -141,7 +148,7 @@ public class TransactionService {
                                  List<Charge> charges, LocalDateTime transactionDate) {
         BigDecimal amount = request.getAmount().getAmount();
 
-        TransactionEntity txn = createTransaction(request, TransactionTypeEnum.WITHDRAWAL, transactionDate);
+        TransactionEntity txn = createTransaction(request, TransactionTypeEnum.WITHDRAWAL, transactionDate, DEBIT, null);
 
         String creditAccountIdentifier = accountWrapper.productDefinition.getCashAccountIdentifier();
         /* if subtxn is provided and it has an account configured the do credit that account*/
@@ -200,6 +207,8 @@ public class TransactionService {
         for(Charge charge : charges){
             addCreditor(charge.getIncomeAccountIdentifier(), calcChargeAmount(amount, charge).doubleValue(), creditors);
             addDebtor(accountWrapper.account.getIdentifier(), calcChargeAmount(amount, charge).doubleValue(), debtors);
+
+            createTransaction(request,TransactionTypeEnum.CHARGES_PAYMENT, getNow(), DEBIT, txn);
         }
 
     }
@@ -333,9 +342,15 @@ public class TransactionService {
         return charges.stream().map(charge -> calcChargeAmount(amount, charge)).reduce(MathUtil::add).orElse(BigDecimal.ZERO);
     }
 
-    private TransactionEntity createTransaction(TransactionRequestData request, TransactionTypeEnum txnType, LocalDateTime transactionDate) {
+    private TransactionEntity createTransaction(TransactionRequestData request, TransactionTypeEnum txnType,
+                                                LocalDateTime transactionDate, String tranType,
+                                                TransactionEntity parent) {
         TransactionEntity txn = new TransactionEntity();
         UUID uuid=UUID.randomUUID();
+
+        while(transactionRepository.findByIdentifier(uuid.toString()).isPresent()){
+            uuid=UUID.randomUUID();
+        }
 
         txn.setIdentifier(uuid.toString());
         txn.setRoutingCode(request.getRoutingCode());
@@ -353,6 +368,8 @@ public class TransactionService {
         txn.setLastModifiedOn();*/
         markLastTransaction(request.getAccountId(), transactionDate);
         txn.setAccountId(request.getAccountId());
+        txn.setType(tranType);
+        txn.setParentTransaction(parent);
         transactionRepository.save(txn);
         return txn;
     }

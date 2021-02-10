@@ -6,9 +6,7 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
  *   http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,13 +14,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.fineract.cn.deposit.service.internal.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
 import java.util.Optional;
 
-public interface SubTransactionTypeRepository extends JpaRepository<SubTransactionTypeEntity, Long> {
-    Optional<SubTransactionTypeEntity> findByIdentifier(final String identifier);
+public interface SelfExpiringTokenRepository  extends JpaRepository<SelfExpiringTokensEntity, Long> {
+    Optional<SelfExpiringTokensEntity> findByTokenAndStatus(String token, String status);
 }

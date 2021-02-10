@@ -28,12 +28,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import static org.apache.fineract.cn.deposit.api.v1.EventConstants.CALCULATE_IBB_RHYTHM;
+
 @Service
 public class RhythmService {
 
   private final Logger logger;
   private final RhythmManager rhythmManager;
   private final ApplicationName applicationName;
+
 
   @Autowired
   public RhythmService(@Qualifier(ServiceConstants.LOGGER_NAME) final Logger logger,
@@ -53,6 +56,20 @@ public class RhythmService {
       beat.setIdentifier("deposit-interest-accrual");
       beat.setAlignmentHour(22);
 
+      try {
+        this.rhythmManager.createBeat(applicationName.toString(), beat);
+      } catch (final Throwable th) {
+        this.logger.error("Error while creating beat: ", th);
+      }
+    }
+
+
+    try {
+      rhythmManager.getBeat(this.applicationName.toString(), CALCULATE_IBB_RHYTHM);
+    } catch (final NotFoundException nfex) {
+      final Beat beat = new Beat();
+      beat.setIdentifier(CALCULATE_IBB_RHYTHM);
+      beat.setAlignmentHour(1);
       try {
         this.rhythmManager.createBeat(applicationName.toString(), beat);
       } catch (final Throwable th) {

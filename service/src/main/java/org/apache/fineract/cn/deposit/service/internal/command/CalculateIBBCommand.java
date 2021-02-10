@@ -16,13 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.cn.deposit.service.internal.repository;
+package org.apache.fineract.cn.deposit.service.internal.command;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.time.LocalDate;
 
-import java.util.List;
-import java.util.Optional;
+public class CalculateIBBCommand {
 
-public interface SubTransactionTypeRepository extends JpaRepository<SubTransactionTypeEntity, Long> {
-    Optional<SubTransactionTypeEntity> findByIdentifier(final String identifier);
+    private final LocalDate dueDate;
+
+    public CalculateIBBCommand(final LocalDate dueDate) {
+        super();
+        this.dueDate = dueDate;
+    }
+
+    public LocalDate dueDate() {
+        return this.dueDate;
+    }
 }

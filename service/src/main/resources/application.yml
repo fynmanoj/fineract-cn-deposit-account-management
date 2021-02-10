@@ -72,3 +72,4 @@ flyway:
 
 config:
   fixedAccountId: true
+  tokenExpirydays: 5

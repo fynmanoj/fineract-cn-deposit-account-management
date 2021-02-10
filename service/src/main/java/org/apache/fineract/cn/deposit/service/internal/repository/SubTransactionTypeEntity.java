@@ -52,16 +52,18 @@ public class SubTransactionTypeEntity {
     @Column(name = "ledger_account_identifier", nullable = false)
     private String ledgerAccount;
 
+    @Column(name = "ibb_conf_plus_days", nullable = false)
+    private Integer ibbConfPlusDays;
+
+    @Column(name = "ibb_conf_minus_days", nullable = false)
+    private Integer ibbConfMinusDays;
+
     public SubTransactionTypeEntity() {
         super();
     }
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getIdentifier() {
@@ -126,5 +128,23 @@ public class SubTransactionTypeEntity {
 
     public void setLedgerAccount(String ledgerAccount) {
         this.ledgerAccount = ledgerAccount;
+    }
+
+    public Integer getIbbConfPlusDays() {
+        if(ibbConfPlusDays == null) return 0;
+        return ibbConfPlusDays;
+    }
+
+    public void setIbbConfPlusDays(Integer ibbConfPlusDays) {
+        this.ibbConfPlusDays = ibbConfPlusDays;
+    }
+
+    public Integer getIbbConfMinusDays() {
+        if(ibbConfMinusDays == null) return 0;
+        return ibbConfMinusDays;
+    }
+
+    public void setIbbConfMinusDays(Integer ibbConfMinusDays) {
+        this.ibbConfMinusDays = ibbConfMinusDays;
     }
 }

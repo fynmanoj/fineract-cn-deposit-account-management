@@ -54,7 +54,7 @@ public class SubTxnTypeAggrigate {
     @CommandHandler
     @EventEmitter(selectorName = EventConstants.SELECTOR_NAME, selectorValue = EventConstants.POST_SUB_TXN_TYPE)
     @Transactional
-    public String createProductInstance(final CreateSubTxnTypeCommand createSubTxnTypeCommand) {
+    public String createSubTransactionType(final CreateSubTxnTypeCommand createSubTxnTypeCommand) {
         final SubTransactionType subTransactionType = createSubTxnTypeCommand.subTransactionType();
 
         final SubTransactionTypeEntity subTransactionTypeEntity = SubTransactionTypeMapper.map(subTransactionType);
@@ -65,7 +65,7 @@ public class SubTxnTypeAggrigate {
     @CommandHandler
     @EventEmitter(selectorName = EventConstants.SELECTOR_NAME, selectorValue = EventConstants.PUT_SUB_TXN_TYPE)
     @Transactional
-    public String updateProductInstance(final UpdateSubTxnTypeCommand createSubTxnTypeCommand) {
+    public String updateSubTransactionType(final UpdateSubTxnTypeCommand createSubTxnTypeCommand) {
         final SubTransactionType subTransactionType = createSubTxnTypeCommand.subTransactionType();
 
         final SubTransactionTypeEntity subTransactionTypeEntity = subTransactionTypeRepository.findByIdentifier(subTransactionType.getIdentifier())

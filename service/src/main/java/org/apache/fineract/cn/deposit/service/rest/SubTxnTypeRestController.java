@@ -18,12 +18,10 @@
  */
 package org.apache.fineract.cn.deposit.service.rest;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.fineract.cn.anubis.annotation.AcceptedTokenType;
 import org.apache.fineract.cn.anubis.annotation.Permittable;
 import org.apache.fineract.cn.command.gateway.CommandGateway;
 import org.apache.fineract.cn.deposit.api.v1.PermittableGroupIds;
-import org.apache.fineract.cn.deposit.api.v1.instance.domain.ProductInstance;
 import org.apache.fineract.cn.deposit.api.v1.instance.domain.SubTransactionType;
 import org.apache.fineract.cn.deposit.service.ServiceConstants;
 import org.apache.fineract.cn.deposit.service.internal.command.CreateSubTxnTypeCommand;

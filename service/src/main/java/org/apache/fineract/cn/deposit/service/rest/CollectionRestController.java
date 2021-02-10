@@ -23,40 +23,28 @@ import org.apache.fineract.cn.anubis.annotation.Permittable;
 import org.apache.fineract.cn.command.domain.CommandCallback;
 import org.apache.fineract.cn.command.gateway.CommandGateway;
 import org.apache.fineract.cn.deposit.api.v1.PermittableGroupIds;
-import org.apache.fineract.cn.deposit.api.v1.instance.domain.SubTransactionType;
-import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.TransactionActionType;
-import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.TransactionRequestData;
-import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.TransactionResponseData;
-import org.apache.fineract.cn.deposit.api.v1.transaction.domain.data.TransactionTypeEnum;
+import org.apache.fineract.cn.deposit.api.v1.collection.domain.Collection;
+import org.apache.fineract.cn.deposit.api.v1.collection.domain.CollectionResponse;
 import org.apache.fineract.cn.deposit.service.ServiceConstants;
-import org.apache.fineract.cn.deposit.service.internal.command.CreateSubTxnTypeCommand;
-import org.apache.fineract.cn.deposit.service.internal.command.TransactionCommand;
-import org.apache.fineract.cn.deposit.service.internal.service.SubTxnTypesService;
-import org.apache.fineract.cn.lang.ServiceException;
+import org.apache.fineract.cn.deposit.service.internal.command.CreateCollectionCommand;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/transaction")
-public class TransactionRestController {
+@RequestMapping("/collection")
+public class CollectionRestController {
     private final Logger logger;
     private final CommandGateway commandGateway;
-    private final SubTxnTypesService service;
 
-    @Autowired
-    public TransactionRestController(@Qualifier(ServiceConstants.LOGGER_NAME) final Logger logger,
-                                     CommandGateway commandGateway,
-                                     SubTxnTypesService service) {
+    public CollectionRestController(@Qualifier(ServiceConstants.LOGGER_NAME) Logger logger,
+                                    CommandGateway commandGateway) {
         this.logger = logger;
         this.commandGateway = commandGateway;
-        this.service = service;
     }
 
     @Permittable(value = AcceptedTokenType.TENANT, groupId = PermittableGroupIds.INSTANCE_MANAGEMENT)
@@ -68,12 +56,11 @@ public class TransactionRestController {
     )
     public
     @ResponseBody
-    ResponseEntity<TransactionResponseData> performTxn(@RequestParam("action") String action, @RequestBody TransactionRequestData requestData)
-            throws Throwable {
-        CommandCallback<TransactionResponseData> result = commandGateway.process(new TransactionCommand(requestData, TransactionActionType.valueOf(action)),
-                TransactionResponseData.class);
+    ResponseEntity<CollectionResponse> create(@RequestBody @Valid final Collection collection)  throws Throwable{
+
+        CommandCallback<CollectionResponse> result = commandGateway.process(new CreateCollectionCommand(collection),
+                CollectionResponse.class);
 
         return ResponseEntity.ok(result.get());
     }
-
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.cn.deposit.service.internal.command.handler;
 
+import org.apache.fineract.cn.deposit.api.v1.EventConstants;
 import org.apache.fineract.cn.deposit.service.internal.command.AccrualCommand;
 import org.apache.fineract.cn.deposit.service.internal.command.BeatListenerCommand;
 import org.apache.fineract.cn.deposit.service.internal.command.PayInterestCommand;
@@ -45,16 +46,27 @@ public class BeatListenerCommandHandler {
   @Transactional
   @CommandHandler
   public void process(final BeatListenerCommand beatListenerCommand) {
-    try {
-      final LocalDateTime dueDate = DateConverter.fromIsoString(beatListenerCommand.beatPublish().getForTime());
-      final CommandCallback<String> commandCallback =
-          this.commandGateway.process(new AccrualCommand(dueDate.toLocalDate()), String.class);
+    if(EventConstants.CALCULATE_IBB_RHYTHM.equals(beatListenerCommand.beatPublish().getIdentifier())){
+      try {
+        final LocalDateTime dueDate = DateConverter.fromIsoString(beatListenerCommand.beatPublish().getForTime());
+        final CommandCallback<String> commandCallback =
+                this.commandGateway.process(new AccrualCommand(dueDate.toLocalDate()), String.class);
 
-      final String date = commandCallback.get();
-      this.commandGateway.process(new PayInterestCommand(DateConverter.dateFromIsoString(date)));
+      } catch (Exception ex) {
+        throw ServiceException.internalError("Could not handle beat: {0}", ex.getMessage());
+      }
+    }else {
+      try {
+        final LocalDateTime dueDate = DateConverter.fromIsoString(beatListenerCommand.beatPublish().getForTime());
+        final CommandCallback<String> commandCallback =
+                this.commandGateway.process(new AccrualCommand(dueDate.toLocalDate()), String.class);
 
-    } catch (Exception ex) {
-      throw ServiceException.internalError("Could not handle beat: {0}", ex.getMessage());
+        final String date = commandCallback.get();
+        this.commandGateway.process(new PayInterestCommand(DateConverter.dateFromIsoString(date)));
+
+      } catch (Exception ex) {
+        throw ServiceException.internalError("Could not handle beat: {0}", ex.getMessage());
+      }
     }
   }
 }
